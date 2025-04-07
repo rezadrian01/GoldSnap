@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { useRouter } from "next/navigation";
+import { signIn } from "next-auth/react";
 
 const SignupPage = () => {
   const router = useRouter();
@@ -45,15 +46,29 @@ const SignupPage = () => {
       body: JSON.stringify(values),
       method: "POST",
     });
-    setLoading(false);
     console.log({ response });
     if (!response.ok) {
+      setLoading(false);
       const res = await response.json();
       setError(
         res?.message || "An error occurred while signing up. Please try again."
       );
     } else {
-      router.push("/dashboard");
+      signIn("credentials", {
+        redirect: false,
+        email: values.email,
+        password: values.password,
+      }).then((res) => {
+        setLoading(false);
+        if (!res?.ok) {
+          setError(
+            res?.error ||
+              "An error occurred while signing in. Please try again."
+          );
+        } else {
+          router.push("/dashboard");
+        }
+      });
     }
   };
   return (
