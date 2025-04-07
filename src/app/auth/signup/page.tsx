@@ -48,6 +48,7 @@ const SignupPage = () => {
     });
     console.log({ response });
     if (!response.ok) {
+      setLoading(false);
       const res = await response.json();
       setError(
         res?.message || "An error occurred while signing up. Please try again."
