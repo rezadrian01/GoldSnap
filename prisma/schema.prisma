@@ -1,0 +1,86 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  // output = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id               String             @id @default(uuid())
+  email            String             @unique
+  password         String
+  name             String?
+  createdAt        DateTime           @default(now())
+
+  investments      Investment[]
+  profitTargets    ProfitTarget[]
+  simulations      WhatIfSimulation[]
+  bookmarks        PriceBookmark[]
+}
+
+model GoldPrice {
+  id               String    @id @default(uuid())
+  dateTime         DateTime  @unique
+  priceSell        Decimal   @db.Decimal(12, 2)
+  priceBuyback     Decimal   @db.Decimal(12, 2)
+}
+
+model Investment {
+  id               String      @id @default(uuid())
+  user             User        @relation(fields: [userId], references: [id])
+  userId           String
+  weight           Float       
+  buyPrice         Decimal     @db.Decimal(12, 2)  
+  buyDate          DateTime
+  createdAt        DateTime    @default(now())
+  note             String?
+
+  profitTarget     ProfitTarget?
+}
+
+model ProfitTarget {
+  id               String      @id @default(uuid())
+  user             User        @relation(fields: [userId], references: [id])
+  userId           String
+  investment       Investment  @relation(fields: [investmentId], references: [id])
+  investmentId     String      @unique
+  targetPercentage Float
+  notified         Boolean     @default(false)
+  createdAt        DateTime    @default(now())
+}
+
+model WhatIfSimulation {
+  id                     String    @id @default(uuid())
+  user                   User      @relation(fields: [userId], references: [id])
+  userId                 String
+  dateSimulated          DateTime
+  weight                 Float
+  simulatedPrice         Decimal   @db.Decimal(12, 2)
+  currentPriceAtSim      Decimal   @db.Decimal(12, 2)
+  profitResult           Decimal   @db.Decimal(12, 2)
+  createdAt              DateTime  @default(now())
+}
+
+model PriceBookmark {
+  id                String        @id @default(uuid())
+  user              User          @relation(fields: [userId], references: [id])
+  userId            String
+  type              BookmarkType
+  price             Decimal       @db.Decimal(12, 2)
+  datePriceRecorded DateTime
+  createdAt         DateTime      @default(now())
+}
+
+enum BookmarkType {
+  HIGHEST
+  LOWEST
+}
